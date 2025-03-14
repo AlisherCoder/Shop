@@ -1,0 +1,17 @@
+npm i @nestjs/mongoose mongoose
+
+npm i --save @nestjs/config
+
+npm i --save class-validator class-transformer
+
+npm install --save @nestjs/swagger
+
+npm i -D @types/multer
+npm i multer
+npm i @nestjs/platform-express
+npm install --save @nestjs/serve-static
+
+npm i bcrypt
+npm i -D @types/bcrypt
+
+npm install --save @nestjs/jwt
