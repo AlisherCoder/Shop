@@ -95,6 +95,9 @@ export class ProductService {
         ])
         .select('-comments')
         .exec();
+      if (!data.length) {
+        return new NotFoundException('Not found category');
+      }
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);

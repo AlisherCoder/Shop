@@ -44,6 +44,9 @@ export class RegionService {
         .sort([['name', orderBy]])
         .select('-users')
         .exec();
+      if (!data.length) {
+        return new NotFoundException('Not found category');
+      }
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);

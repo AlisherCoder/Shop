@@ -115,11 +115,9 @@ export class UserService {
         .populate({ path: 'region', select: '-users' })
         .select(['-products', '-orders', '-comments'])
         .exec();
-
       if (!data.length) {
         return new NotFoundException('Not found data');
       }
-
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);
