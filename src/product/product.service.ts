@@ -24,9 +24,13 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto, req: Request) {
-    let user = req['user'].id;
+    let user = req['user'];
+    if (user.role != 'SELLER') {
+      return new ForbiddenException('Not allowed. You are noy seller');
+    }
+
     try {
-      createProductDto['user'] = user;
+      createProductDto['user'] = user.id;
 
       let category = await this.categoryModel.findById(
         createProductDto.category,

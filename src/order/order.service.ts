@@ -19,11 +19,15 @@ export class OrderService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto, req: Request) {
-    let user = req['user'].id;
+    let user = req['user'];
     let { products } = createOrderDto;
     let newProducts: any[] = [];
     let sellerId: any = '';
 
+    if (user.role != 'CLIENT') {
+      return new ForbiddenException('Not allowed, you are not client');
+    }
+    
     try {
       for (let obj of products) {
         let prd = await this.productModel.findById(obj.product);
@@ -35,7 +39,7 @@ export class OrderService {
       }
 
       createOrderDto.products = newProducts;
-      await this.userModel.findByIdAndUpdate(user, {
+      await this.userModel.findByIdAndUpdate(user.id, {
         $push: { orders: createOrderDto },
       });
 
