@@ -3,7 +3,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type RegionDocument = HydratedDocument<Region>;
 
-@Schema()
+@Schema({versionKey: false})
 export class Region {
   @Prop({ required: true, unique: true })
   name: string;

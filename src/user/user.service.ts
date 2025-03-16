@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,6 +14,9 @@ import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Region } from 'src/region/schema/region.schema';
 import * as bcrypt from 'bcrypt';
+import * as path from 'path';
+import * as fs from 'fs';
+import { Request } from 'express';
 
 @Injectable()
 export class UserService {
@@ -82,18 +86,64 @@ export class UserService {
     }
   }
 
-  async findAll() {
+  async findAll(query: any, req: Request) {
+    let user = req['user'];
+    if (user.role != 'ADMIN') return new ForbiddenException('Not allowed');
+
+    let {
+      page = 1,
+      limit = 5,
+      orderBy = 'asc',
+      sortBy = 'name',
+      ...filter
+    } = query;
+    let skip = (page - 1) * limit;
+
+    if (filter.name) filter.name = { $regex: filter.name, $options: 'i' };
+
+    if (filter.shopname)
+      filter.shopname = { $regex: filter.shopname, $options: 'i' };
+
+    if (filter.phone) filter.phone = { $regex: filter.phone, $options: 'i' };
+
     try {
-      let data = await this.userModel.find();
+      let data = await this.userModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort([[sortBy, orderBy]])
+        .populate({ path: 'region', select: '-users' })
+        .select(['-products', '-orders', '-comments'])
+        .exec();
+
+      if (!data.length) {
+        return new NotFoundException('Not found data');
+      }
+
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, req: Request) {
+    let user = req['user'];
+    if (user.role != 'ADMIN' && user.id != id) {
+      return new ForbiddenException('Not allowed');
+    }
+
     try {
-      let data = await this.userModel.findById(id);
+      let data = await this.userModel
+        .findById(id)
+        .populate([
+          {
+            path: 'products',
+            select: '-comments',
+            populate: { path: 'category', select: '-products' },
+          },
+          { path: 'region', select: '-users' },
+        ])
+        .exec();
       if (!data) {
         return new NotFoundException('Not found user');
       }
@@ -103,26 +153,75 @@ export class UserService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto, req: Request) {
+    let user = req['user'];
+    if (user.role != 'ADMIN' && user.id != id) {
+      return new ForbiddenException('Not allowed');
+    }
+
     try {
+      let user = await this.userModel.findById(id);
+      if (!user) {
+        return new NotFoundException('Not found user');
+      }
+
+      if (updateUserDto.role) {
+        return new ForbiddenException('Not allowed update role');
+      }
+
       let data = await this.userModel.findByIdAndUpdate(id, updateUserDto, {
         new: true,
       });
-      if (!data) {
-        return new NotFoundException('Not found user');
+
+      if (updateUserDto.image) {
+        let filepath = path.join('uploads', user.image);
+        try {
+          fs.unlinkSync(filepath);
+        } catch (error) {}
       }
+
+      if (updateUserDto.region) {
+        let foundregion = await this.regionModel.findById(updateUserDto.region);
+        if (!foundregion) {
+          return new BadRequestException('Not found region');
+        }
+
+        await this.regionModel.updateMany(
+          { users: user._id },
+          { $pull: { users: user._id } },
+        );
+        await this.regionModel.findByIdAndUpdate(updateUserDto.region, {
+          $push: { users: data!._id },
+        });
+      }
+
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, req: Request) {
+    let user = req['user'];
+    if (user.role != 'ADMIN' && user.id != id) {
+      return new ForbiddenException('Not allowed');
+    }
+
     try {
       let data = await this.userModel.findByIdAndDelete(id);
       if (!data) {
         return new NotFoundException('Not found user');
       }
+
+      let filepath = path.join('uploads', data.image);
+      try {
+        fs.unlinkSync(filepath);
+      } catch (error) {}
+
+      await this.regionModel.updateMany(
+        { users: data._id },
+        { $pull: { users: data._id } },
+      );
       return { data };
     } catch (error) {
       return new BadRequestException(error.message);

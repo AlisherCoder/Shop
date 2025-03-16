@@ -9,7 +9,18 @@ enum Role {
   admin = 'ADMIN',
 }
 
-@Schema()
+export interface Item {
+  product: string;
+  count: number;
+  totalSum: number;
+}
+
+interface Order {
+  totalPrice: number;
+  products: Item[];
+}
+
+@Schema({ versionKey: false, timestamps: true })
 export class User {
   @Prop({ required: true })
   name: string;
@@ -37,6 +48,16 @@ export class User {
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Product' })
   products: mongoose.Types.ObjectId[];
+
+  @Prop()
+  orders: Order[];
+
+  @Prop({
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Comment',
+    required: true,
+  })
+  comments: mongoose.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
