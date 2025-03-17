@@ -3,9 +3,9 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
-enum Role {
+export enum Role {
   client = 'CLIENT',
-  saller = 'SELLER',
+  seller = 'SELLER',
   admin = 'ADMIN',
 }
 

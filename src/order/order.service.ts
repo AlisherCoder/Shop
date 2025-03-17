@@ -24,10 +24,6 @@ export class OrderService {
     let newProducts: any[] = [];
     let sellerId: any = '';
 
-    if (user.role != 'CLIENT') {
-      return new ForbiddenException('Not allowed, you are not client');
-    }
-    
     try {
       for (let obj of products) {
         let prd = await this.productModel.findById(obj.product);
@@ -53,11 +49,7 @@ export class OrderService {
     }
   }
 
-  async remove(userid: string, req: Request) {
-    let user = req['user'];
-    if (userid != user.id) {
-      return new ForbiddenException('Not allowed');
-    }
+  async remove(userid: string) {
 
     try {
       await this.userModel.findByIdAndUpdate(userid, {

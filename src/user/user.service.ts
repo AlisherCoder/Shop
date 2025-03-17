@@ -86,10 +86,7 @@ export class UserService {
     }
   }
 
-  async findAll(query: any, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN') return new ForbiddenException('Not allowed');
-
+  async findAll(query: any) {
     let {
       page = 1,
       limit = 5,
@@ -152,11 +149,6 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN' && user.id != id) {
-      return new ForbiddenException('Not allowed');
-    }
-
     try {
       let user = await this.userModel.findById(id);
       if (!user) {
@@ -200,11 +192,6 @@ export class UserService {
   }
 
   async remove(id: string, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN' && user.id != id) {
-      return new ForbiddenException('Not allowed');
-    }
-
     try {
       let data = await this.userModel.findByIdAndDelete(id);
       if (!data) {

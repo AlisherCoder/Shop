@@ -16,12 +16,17 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/user/schema/user.schema';
+import { RoleGuard } from 'src/auth/roles.guard';
 
 @ApiBearerAuth()
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  @Roles(Role.seller)
+  @UseGuards(RoleGuard)
   @UseGuards(AuthGuard)
   @Post()
   create(@Body() createProductDto: CreateProductDto, @Req() req: Request) {
@@ -55,7 +60,11 @@ export class ProductController {
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @Req() req: Request) {
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @Req() req: Request,
+  ) {
     return this.productService.update(id, updateProductDto, req);
   }
 

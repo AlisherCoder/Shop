@@ -19,10 +19,7 @@ export class RegionService {
     @InjectModel(User.name) private userModel: Model<Region>,
   ) {}
 
-  async create(createRegionDto: CreateRegionDto, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN') return new ForbiddenException('Not allowed');
-
+  async create(createRegionDto: CreateRegionDto) {
     try {
       let data = await this.regionModel.create(createRegionDto);
       return { data };
@@ -71,10 +68,7 @@ export class RegionService {
     }
   }
 
-  async update(id: string, updateRegionDto: UpdateRegionDto, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN') return new ForbiddenException('Not allowed');
-
+  async update(id: string, updateRegionDto: UpdateRegionDto) {
     try {
       let data = await this.regionModel.findByIdAndUpdate(id, updateRegionDto, {
         new: true,
@@ -88,10 +82,7 @@ export class RegionService {
     }
   }
 
-  async remove(id: string, req: Request) {
-    let user = req['user'];
-    if (user.role != 'ADMIN') return new ForbiddenException('Not allowed');
-
+  async remove(id: string) {
     try {
       let data = await this.regionModel.findByIdAndDelete(id);
       if (!data) {

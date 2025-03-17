@@ -25,9 +25,6 @@ export class ProductService {
 
   async create(createProductDto: CreateProductDto, req: Request) {
     let user = req['user'];
-    if (user.role != 'SELLER') {
-      return new ForbiddenException('Not allowed. You are noy seller');
-    }
 
     try {
       createProductDto['user'] = user.id;
